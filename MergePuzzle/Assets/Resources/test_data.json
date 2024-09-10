@@ -1,0 +1,22 @@
+[
+  {
+    "id": "100",
+    "name": "star",
+    "icon_name": "star"
+  },
+  {
+    "id": "101",
+    "name": "emptystar",
+    "icon_name": "star box"
+  },
+  {
+    "id": "102",
+    "name": "Frillpudding",
+    "icon_name": "jelly"
+  },
+  {
+    "id": "103",
+    "name": "smoothpudding",
+    "icon_name": "stage"
+  }
+]
