@@ -1,19 +1,19 @@
-using System.Collections;
+/*using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using System.IO;
-using UnityEngine.EventSystems;  
+using UnityEngine.EventSystems;
 
 public class TextReader : MonoBehaviour
 {
-    public string filePath = "Assets/Resources/testdata.txt";  
-    public Vector2 startPosition = new Vector2(0, 0);  
-    public Vector2 ImageInterval = new Vector2(200, 200);  
-    public float Interval = 200f; 
-    public Transform canvasTransform;  
+    public string filePath = "Assets/Resources/testdata.txt";
+    public Vector2 startPosition = new Vector2(0, 0);
+    public Vector2 ImageInterval = new Vector2(200, 200);
+    public float Interval = 200f;
+    public Transform canvasTransform;
 
-    // enum 정의
+    // enum
     public enum ItemType
     {
         Jelly,
@@ -21,7 +21,6 @@ public class TextReader : MonoBehaviour
         Star
     }
 
-    // 숫자에 따라 enum 값을 매핑하는 Dictionary
     private Dictionary<int, ItemType> numberToItemMap = new Dictionary<int, ItemType>()
     {
         { 1, ItemType.Jelly },
@@ -29,17 +28,16 @@ public class TextReader : MonoBehaviour
         { 3, ItemType.Star }
     };
 
+    // 이미지 위치를 저장하는 리스트
+    public static List<ImageClickHandler> imageHandlers = new List<ImageClickHandler>();
+
     void Start()
     {
-        // 텍스트 파일 읽기
         string fileContent = File.ReadAllText(filePath);
-
-        // 각 줄을 분리
         string[] lines = fileContent.Split('\n'); // 줄을 분리
 
         Vector2 currentPosition = startPosition;  // 현재 이미지 위치
 
-        // 각 줄을 순회하면서 쉼표로 분리하고 이미지 생성
         foreach (string line in lines)
         {
             string[] numbers = line.Split(','); // 쉼표로 숫자를 나누기
@@ -48,30 +46,28 @@ public class TextReader : MonoBehaviour
             {
                 int numberInt = int.Parse(number.Trim());  // 숫자로 변환
 
-                // 해당 숫자에 대응하는 이미지를 Resources에서 불러오기
                 string spritePath = "Images/" + numberInt;  // 이미지 경로 추정
                 Sprite numberSprite = Resources.Load<Sprite>(spritePath);
 
                 if (numberSprite != null)
                 {
-                    // 새로운 이미지 오브젝트 생성
                     GameObject newImageObject = new GameObject("NumberImage");
                     Image imageComponent = newImageObject.AddComponent<Image>();
                     imageComponent.sprite = numberSprite;
 
-                    // 이미지를 Canvas에 추가
                     newImageObject.transform.SetParent(canvasTransform, false);
 
                     // 이미지의 위치 설정
                     RectTransform rectTransform = newImageObject.GetComponent<RectTransform>();
                     rectTransform.anchoredPosition = currentPosition;
-                    rectTransform.sizeDelta = new Vector2(100, 100);  // 이미지 크기 설정
+                    rectTransform.sizeDelta = new Vector2(200, 200);  // 이미지 크기 설정
 
-                    // 클릭 이벤트를 위한 ImageClickHandler 추가
                     ImageClickHandler clickHandler = newImageObject.AddComponent<ImageClickHandler>();
                     clickHandler.Initialize(currentPosition, numberInt, numberToItemMap[numberInt], imageComponent);
 
-                    // 다음 이미지를 위한 좌표 갱신 (가로로 배치)
+                    // 핸들러를 리스트에 추가하여 나중에 접근 가능
+                    imageHandlers.Add(clickHandler);
+
                     currentPosition.x += ImageInterval.x;
                 }
                 else
@@ -87,9 +83,10 @@ public class TextReader : MonoBehaviour
     }
 }
 
+
 public class ImageClickHandler : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 {
-    private Vector2 position;
+    private Vector2 position; // 이미지의 위치
     private int number;
     private TextReader.ItemType itemType;
     private Image imageComponent;
@@ -103,17 +100,64 @@ public class ImageClickHandler : MonoBehaviour, IPointerDownHandler, IPointerUpH
         imageComponent = img;
     }
 
+    // 좌표를 간단한 정수형으로 변환하는 함수
+    private string GetFormattedPosition(Vector2 pos)
+    {
+        int x = Mathf.RoundToInt(pos.x);  // X 좌표를 반올림하여 정수로 변환
+        int y = Mathf.RoundToInt(pos.y);  // Y 좌표를 반올림하여 정수로 변환
+        return $"({x}, {y})";
+    }
+
+    // 클릭된 위치에서 가장 가까운 이미지의 핸들러를 찾는 함수
+    private ImageClickHandler GetClosestImage(Vector2 clickPosition)
+    {
+        ImageClickHandler closestHandler = null;
+        float closestDistance = float.MaxValue;
+
+        // 모든 이미지 핸들러를 순회하며 가장 가까운 이미지를 찾음
+        foreach (var handler in TextReader.imageHandlers)
+        {
+            float distance = Vector2.Distance(clickPosition, handler.position);
+            if (distance < closestDistance)
+            {
+                closestDistance = distance;
+                closestHandler = handler;
+            }
+        }
+
+        return closestHandler;
+    }
+
     // PointerDown 이벤트 처리 (이미지 숨김)
     public void OnPointerDown(PointerEventData eventData)
     {
         imageComponent.enabled = false;  // 이미지를 숨김
-        Debug.Log($"Pressed: ({position.x}, {position.y}), {number}, {itemType}");
+
+        // 눌렀을 때 이미지의 정확한 위치 출력
+        Debug.Log($"눌렀음: {GetFormattedPosition(position)}, {number}, {itemType}");
     }
 
-    // PointerUp 이벤트 처리 (이미지 다시 보이게)
+    // PointerUp 이벤트 처리 (뗀 위치의 가장 가까운 이미지 정보 출력)
     public void OnPointerUp(PointerEventData eventData)
     {
         imageComponent.enabled = true;  // 이미지를 다시 표시
-        Debug.Log($"Released: ({position.x}, {position.y}), {number}, {itemType}");
+
+        // 마우스 클릭 좌표를 캔버스의 로컬 좌표로 변환
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            imageComponent.canvas.transform as RectTransform,
+            eventData.position,
+            eventData.pressEventCamera,
+            out Vector2 localPoint);
+
+        // 가장 가까운 이미지 핸들러 찾기
+        ImageClickHandler closestHandler = GetClosestImage(localPoint);
+
+        if (closestHandler != null)
+        {
+            // 뗀 위치에 있는 이미지의 위치와 정보 출력
+            Debug.Log($"뗐음: {GetFormattedPosition(closestHandler.position)}, {closestHandler.number}, {closestHandler.itemType}");
+        }
     }
 }
+
+*/
