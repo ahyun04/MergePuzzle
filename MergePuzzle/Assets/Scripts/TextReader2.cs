@@ -1,9 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
-public class ImageDisplay : MonoBehaviour
+public class TextReader2 : MonoBehaviour
 {
     public enum ImageType
     {
@@ -14,18 +13,18 @@ public class ImageDisplay : MonoBehaviour
 
     public string filePath = "Assets/Resources/testdata.txt";
     public Vector2 startPosition = new Vector2(0, 0);
-    public float imageSize = 1f; // 이미지 크기 (스프라이트의 월드 스케일에 영향을 줌)
+    public float imageSize = 1f; 
 
-    private Sprite[] sprites; // 스프라이트 배열을 정의
+    private Sprite[] sprites; 
 
     void Start()
     {
-        // 텍스트 파일을 읽어옵니다.
+        // 텍스트 파일
         TextAsset textAsset = Resources.Load<TextAsset>("testdata");
         if (textAsset != null)
         {
             string fileContent = textAsset.text;
-            LoadSprites(); // 스프라이트를 로드
+            LoadSprites(); 
             DisplayImagesFromText(fileContent);
         }
         else
@@ -64,8 +63,8 @@ public class ImageDisplay : MonoBehaviour
 
                     if (sprite != null)
                     {
-                        CreateImage(sprite, xOffset, -currentPosition.y, imageIndex); // 인덱스 정보 전달
-                        xOffset += imageSize; // 이미지 사이의 간격 조정
+                        CreateImage(sprite, xOffset, -currentPosition.y, imageIndex); 
+                        xOffset += imageSize;
                     }
                     else
                     {
@@ -78,14 +77,14 @@ public class ImageDisplay : MonoBehaviour
                 }
             }
 
-            currentPosition.y -= imageSize; // 줄 사이의 간격 조정
-            currentPosition.x = startPosition.x; // 새로운 줄의 시작 위치로 초기화
+            currentPosition.y -= imageSize; 
+            currentPosition.x = startPosition.x; 
         }
     }
 
     Sprite GetSpriteFromEnum(ImageType imageType)
     {
-        int index = (int)imageType - 1; // 0-based index
+        int index = (int)imageType - 1; 
         if (index >= 0 && index < sprites.Length)
         {
             return sprites[index];
@@ -95,17 +94,15 @@ public class ImageDisplay : MonoBehaviour
 
     void CreateImage(Sprite sprite, float xOffset, float yOffset, int index)
     {
-        GameObject imageObject = new GameObject("Image");
-        imageObject.transform.position = new Vector3(xOffset, yOffset, 0); // 위치 설정
+        GameObject imageObject = new GameObject("Item");
+        imageObject.transform.position = new Vector3(xOffset, yOffset, 0);
 
         SpriteRenderer spriteRenderer = imageObject.AddComponent<SpriteRenderer>();
         spriteRenderer.sprite = sprite;
 
-        // 이미지 크기 조정
         imageObject.transform.localScale = new Vector3(imageSize / sprite.bounds.size.x, imageSize / sprite.bounds.size.y, 1);
 
-        // 클릭 핸들러 추가
         ImageClickHandler clickHandler = imageObject.AddComponent<ImageClickHandler>();
-        clickHandler.SetIndex(index); // 인덱스 정보 설정
+        //clickHandler.SetIndex(index);
     }
 }
