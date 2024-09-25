@@ -6,10 +6,10 @@ using DG.Tweening; // DOTween 네임스페이스 추가
 public class ImageClickHandler : MonoBehaviour
 {
     private SpriteRenderer spriteRenderer;
-    private Vector3 originalPosition; // 원래 위치 저장
+    public Vector3 originalPosition; // 원래 위치 저장
     private Vector3 position;
-    private string imageName;
-    private Vector2Int gridIndex; // 그리드 인덱스 (x, y)
+    public string imageName;
+    public Vector2Int gridIndex; // 그리드 인덱스 (x, y)
     private bool isClicked = false; // 클릭 상태를 추적하는 변수
     private Vector3 offset; // 이미지와 마우스 사이의 오프셋
     private Tween moveTween; // DOTween Tween 변수
@@ -20,6 +20,8 @@ public class ImageClickHandler : MonoBehaviour
     public float maxY = 3f; // 그리드 최대 Y
     public float gridSize = 1f; // 그리드 셀 크기
     public float moveDuration = 0.5f; // DOTween을 통한 이동 시간
+
+    private GridManager gridManager; // 그리드를 관리하는 매니저 참조
 
     void Start()
     {
@@ -36,6 +38,12 @@ public class ImageClickHandler : MonoBehaviour
 
         // 초기 인덱스를 설정 (위치를 기반으로)
         gridIndex = GetGridIndexFromPosition(transform.position);
+
+        // GridManager를 찾음
+        gridManager = FindObjectOfType<GridManager>();
+
+        // GridManager에 자신을 등록
+        gridManager.RegisterImageHandler(this);
     }
 
     // 인덱스를 설정하는 함수 (x, y 좌표)
@@ -105,23 +113,30 @@ public class ImageClickHandler : MonoBehaviour
                 if (hitImageHandler != null)
                 {
                     // 다른 이미지와 자리를 교환
+                    Debug.Log($"겹침 : ({hitImageHandler.gridIndex.x}, {hitImageHandler.gridIndex.y}), {hitImageHandler.imageName}");
                     SwapPosition(hitImageHandler);
+                    Debug.Log($"놨음 : ({gridIndex.x}, {gridIndex.y}), {imageName}");
                 }
                 else
                 {
                     // 교환이 불가능하면 원래 자리로 복귀
                     moveTween = transform.DOMove(originalPosition, moveDuration).SetEase(Ease.InOutQuad);
+                    Debug.Log($"놨음 : ({gridIndex.x}, {gridIndex.y}), {imageName} (교환 불가)");
                 }
             }
             else
             {
                 // 아무것도 없으면 원래 자리로 복귀
                 moveTween = transform.DOMove(originalPosition, moveDuration).SetEase(Ease.InOutQuad);
+                Debug.Log($"놨음 : ({gridIndex.x}, {gridIndex.y}), {imageName} (아무것도 없음)");
             }
 
             // 이동 후 인덱스 업데이트
             gridIndex = GetGridIndexFromPosition(transform.position);
-            Debug.Log($"새 위치 : ({gridIndex.x}, {gridIndex.y}), {imageName}");
+            Debug.Log($"이동함 : ({gridIndex.x}, {gridIndex.y}), {imageName}");
+
+            // 그리드 업데이트
+            gridManager.ReloadGrid(); // 그리드 매니저의 ReloadGrid() 호출
         }
     }
 
@@ -133,12 +148,13 @@ public class ImageClickHandler : MonoBehaviour
                currentPosition.y >= minY && currentPosition.y <= maxY;
     }
 
-    // 다른 이미지와 자리 교환
+    // 다른 이미지와 자리 교환 (DOTween을 이용한 교환 애니메이션)
     void SwapPosition(ImageClickHandler otherImage)
     {
         Vector3 tempPosition = otherImage.transform.position;
         Vector2Int tempIndex = otherImage.gridIndex;
 
+        // DOTween을 이용하여 각 이미지가 서로의 위치로 이동
         otherImage.moveTween = otherImage.transform.DOMove(originalPosition, moveDuration).SetEase(Ease.InOutQuad);
         moveTween = transform.DOMove(tempPosition, moveDuration).SetEase(Ease.InOutQuad);
 
@@ -146,8 +162,11 @@ public class ImageClickHandler : MonoBehaviour
         originalPosition = tempPosition;
         gridIndex = tempIndex;
 
-        otherImage.originalPosition = tempPosition;
+        otherImage.originalPosition = otherImage.transform.position;
         otherImage.SetGridIndex(tempIndex);
+
+        // 콘솔에 로그 출력
+        Debug.Log($"교환됨 : {imageName}가 ({gridIndex.x}, {gridIndex.y})로, {otherImage.imageName}가 ({otherImage.gridIndex.x}, {otherImage.gridIndex.y})로 이동함");
     }
 
     // 위치를 인덱스로 변환하는 함수

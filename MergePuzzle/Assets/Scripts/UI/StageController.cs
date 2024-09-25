@@ -35,4 +35,6 @@ public class StageController : MonoBehaviour
         menuPanel.SetActive(false);
         stageImage.gameObject.SetActive(false);
     }
+
+
 }

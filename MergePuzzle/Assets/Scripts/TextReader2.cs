@@ -6,9 +6,10 @@ public class TextReader2 : MonoBehaviour
 {
     public enum ImageType
     {
-        Jelly = 1,
-        Pudding = 2,
-        Star = 3
+        Dish = 1,
+        BigDish = 2,
+        TopDish = 3,
+        Bowl = 4
     }
 
     public string filePath = "Assets/Resources/testdata.txt";
@@ -38,9 +39,10 @@ public class TextReader2 : MonoBehaviour
         // 스프라이트를 미리 로드
         sprites = new Sprite[]
         {
-            Resources.Load<Sprite>("Images/" + ImageType.Jelly.ToString()),   // "Images/Jelly"
-            Resources.Load<Sprite>("Images/" + ImageType.Pudding.ToString()), // "Images/Pudding"
-            Resources.Load<Sprite>("Images/" + ImageType.Star.ToString())     // "Images/Star"
+            Resources.Load<Sprite>("Images/" + ImageType.Dish.ToString()),   // "Images/Jelly"
+            Resources.Load<Sprite>("Images/" + ImageType.BigDish.ToString()), // "Images/Pudding"
+            Resources.Load<Sprite>("Images/" + ImageType.TopDish.ToString()),     // "Images/Star"
+            Resources.Load<Sprite>("Images/" + ImageType.Bowl.ToString())     
         };
     }
 

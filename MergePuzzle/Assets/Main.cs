@@ -1,46 +1,32 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.U2D;
-using UnityEngine.UI;
 
 public class Main : MonoBehaviour
 {
-    public GameObject imagePrefab;
-    public Transform spawnTransform;
+    public GameObject imagePrefab; // Prefab for displaying images
+    public Transform gridParent;   // Parent object for the grid (could be an empty GameObject in the scene)
+    public Vector2 startPosition;  // The starting position of the grid in world space
+    public float cellSize = 1f;    // Size of each cell in the grid
+    public float spacing = 0.1f;   // Spacing between grid cells
 
-    private SpriteAtlas spriteAtlas;
-    private Dictionary<string, Sprite> spriteDictionary = new Dictionary<string, Sprite>();
-    private int[,] TestData;
+    private Sprite[] atlasSprites; // Loaded atlas sprites
+    private int[,] TestData;       // TestData parsed from the text file
 
     void Start()
     {
-        // 스프라이트 아틀라스 로드
-        LoadAtlas();
+        // Load all sprites from the atlas
+        atlasSprites = Resources.LoadAll<Sprite>("Item");
 
-        // 텍스트 파일 로드 및 파싱
+        // Load and parse the text file
         TextAsset textFile = Resources.Load<TextAsset>("testdata");
         ParseTextFile(textFile.text);
 
-        // 이미지 생성 및 배치
-        SpawnImages();
+        // Instantiate prefabs according to TestData
+        DisplayGrid();
     }
 
-    void LoadAtlas()
-    {
-        // Resources 폴더에 있는 스프라이트 아틀라스 로드
-        spriteAtlas = Resources.Load<SpriteAtlas>("Atlas/Item");
-
-        // 스프라이트 아틀라스의 모든 스프라이트를 딕셔너리에 추가
-        Sprite[] sprites = new Sprite[spriteAtlas.spriteCount];
-        spriteAtlas.GetSprites(sprites);
-
-        foreach (Sprite sprite in sprites)
-        {
-            spriteDictionary[sprite.name] = sprite;
-        }
-    }
-
+    // Parse the text file into a 2D array
     void ParseTextFile(string fileContent)
     {
         string[] lines = fileContent.Split('\n');
@@ -59,28 +45,31 @@ public class Main : MonoBehaviour
         }
     }
 
-    void SpawnImages()
+    // Instantiate the image prefabs in a grid pattern
+    void DisplayGrid()
     {
-        // 이미지 생성 및 배치
-        for (int i = 0; i < TestData.GetLength(0); i++)
+        for (int row = 0; row < TestData.GetLength(0); row++)
         {
-            for (int j = 0; j < TestData.GetLength(1); j++)
+            for (int col = 0; col < TestData.GetLength(1); col++)
             {
-                int index = TestData[i, j] - 1; // 인덱스 조정 (1-based to 0-based)
-                string spriteName = "Sprite" + (index + 1); // 스프라이트 이름 조정
+                int spriteIndex = TestData[row, col] - 1; // Match 1 to index 0, 2 to 1, etc.
 
-                if (spriteDictionary.TryGetValue(spriteName, out Sprite sprite))
+                if (spriteIndex >= 0 && spriteIndex < atlasSprites.Length)
                 {
-                    GameObject imageObject = Instantiate(imagePrefab, spawnTransform.position, Quaternion.identity);
-                    Image image = imageObject.GetComponent<Image>();
-                    if (image != null)
-                    {
-                        image.sprite = sprite;
-                    }
+                    // Instantiate a new image prefab
+                    GameObject newImage = Instantiate(imagePrefab, gridParent);
 
-                    // 필요한 경우 위치 조정
-                    RectTransform rt = imageObject.GetComponent<RectTransform>();
-                    //rt.anchoredPosition = new Vector2(j * 100, -i * 100); // 예시 위치 조정
+                    // Set the sprite to match the number from TestData
+                    Sprite matchingSprite = atlasSprites[spriteIndex];
+                    newImage.GetComponent<SpriteRenderer>().sprite = matchingSprite;
+
+                    // Position the image based on row and column
+                    Vector3 position = new Vector3(
+                        startPosition.x + col * (cellSize + spacing),
+                        startPosition.y - row * (cellSize + spacing),
+                        0
+                    );
+                    newImage.transform.position = position;
                 }
             }
         }
