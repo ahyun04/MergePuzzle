@@ -16,7 +16,6 @@ public class GridManager : MonoBehaviour
             imageHandler.transform.position = newPosition;
             imageHandler.originalPosition = newPosition;
 
-            Debug.Log($"이미지 {imageHandler.imageName}가 그리드에 다시 배치됨: ({imageHandler.gridIndex.x}, {imageHandler.gridIndex.y})");
         }
     }
 
@@ -34,7 +33,7 @@ public class GridManager : MonoBehaviour
         if (!imageHandlers.Contains(handler))
         {
             imageHandlers.Add(handler);
-            Debug.Log($"이미지 {handler.imageName}가 GridManager에 등록됨.");
+            //Debug.Log($"이미지 {handler.imageName}가 GridManager에 등록됨.");
         }
     }
 }

@@ -517,7 +517,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   imagePrefab: {fileID: 1160567312302155028, guid: d28d75004b473924dba478ad8443f1de, type: 3}
-  gridParent: {fileID: 0}
+  gridParent: {fileID: 1428424925}
   startPosition: {x: 0, y: 0}
   cellSize: 1
   spacing: 10

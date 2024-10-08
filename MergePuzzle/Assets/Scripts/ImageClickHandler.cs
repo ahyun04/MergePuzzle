@@ -113,7 +113,7 @@ public class ImageClickHandler : MonoBehaviour
                 if (hitImageHandler != null)
                 {
                     // 다른 이미지와 자리를 교환
-                    Debug.Log($"겹침 : ({hitImageHandler.gridIndex.x}, {hitImageHandler.gridIndex.y}), {hitImageHandler.imageName}");
+                    //Debug.Log($"겹침 : ({hitImageHandler.gridIndex.x}, {hitImageHandler.gridIndex.y}), {hitImageHandler.imageName}");
                     SwapPosition(hitImageHandler);
                     Debug.Log($"놨음 : ({gridIndex.x}, {gridIndex.y}), {imageName}");
                 }
@@ -151,22 +151,24 @@ public class ImageClickHandler : MonoBehaviour
     // 다른 이미지와 자리 교환 (DOTween을 이용한 교환 애니메이션)
     void SwapPosition(ImageClickHandler otherImage)
     {
+        // 현재 이미지와 다른 이미지의 위치와 인덱스를 임시로 저장
         Vector3 tempPosition = otherImage.transform.position;
         Vector2Int tempIndex = otherImage.gridIndex;
 
-        // DOTween을 이용하여 각 이미지가 서로의 위치로 이동
+        // DOTween을 이용해 각 이미지가 상대방의 위치로 부드럽게 이동
         otherImage.moveTween = otherImage.transform.DOMove(originalPosition, moveDuration).SetEase(Ease.InOutQuad);
         moveTween = transform.DOMove(tempPosition, moveDuration).SetEase(Ease.InOutQuad);
 
-        // 자리 및 인덱스 업데이트
-        originalPosition = tempPosition;
-        gridIndex = tempIndex;
+        // 인덱스 교환
+        otherImage.SetGridIndex(gridIndex);  // 다른 이미지의 인덱스를 현재 이미지의 인덱스로 설정
+        SetGridIndex(tempIndex);  // 현재 이미지의 인덱스를 다른 이미지의 인덱스로 설정
 
+        // 각 이미지의 원래 위치 업데이트
         otherImage.originalPosition = otherImage.transform.position;
-        otherImage.SetGridIndex(tempIndex);
+        originalPosition = transform.position;
 
-        // 콘솔에 로그 출력
-        Debug.Log($"교환됨 : {imageName}가 ({gridIndex.x}, {gridIndex.y})로, {otherImage.imageName}가 ({otherImage.gridIndex.x}, {otherImage.gridIndex.y})로 이동함");
+        // 로그 출력
+        Debug.Log($"교환됨: {imageName}가 ({gridIndex.x}, {gridIndex.y})로 이동함, {otherImage.imageName}는 ({otherImage.gridIndex.x}, {otherImage.gridIndex.y})로 이동함");
     }
 
     // 위치를 인덱스로 변환하는 함수
