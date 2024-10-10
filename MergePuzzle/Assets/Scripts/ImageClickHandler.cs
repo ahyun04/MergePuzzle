@@ -36,6 +36,17 @@ public class ImageClickHandler : MonoBehaviour
             gameObject.AddComponent<BoxCollider2D>();
         }
 
+        // Rigidbody2D가 없다면 추가하고 속성 설정
+        Rigidbody2D rb = GetComponent<Rigidbody2D>();
+        if (rb == null)
+        {
+            rb = gameObject.AddComponent<Rigidbody2D>();
+        }
+
+        // Rigidbody2D의 속성 설정
+        rb.gravityScale = 0; // 중력 스케일 0으로 설정
+        rb.isKinematic = true; // isKinematic을 true로 설정
+
         // 초기 인덱스를 설정 (위치를 기반으로)
         gridIndex = GetGridIndexFromPosition(transform.position);
 
@@ -43,8 +54,9 @@ public class ImageClickHandler : MonoBehaviour
         gridManager = FindObjectOfType<GridManager>();
 
         // GridManager에 자신을 등록
-        gridManager.RegisterImageHandler(this);
+        // gridManager.RegisterImageHandler(this);
     }
+
 
     // 인덱스를 설정하는 함수 (x, y 좌표)
     public void SetGridIndex(Vector2Int index)
@@ -136,7 +148,7 @@ public class ImageClickHandler : MonoBehaviour
             Debug.Log($"이동함 : ({gridIndex.x}, {gridIndex.y}), {imageName}");
 
             // 그리드 업데이트
-            gridManager.ReloadGrid(); // 그리드 매니저의 ReloadGrid() 호출
+            //gridManager.ReloadGrid(); // 그리드 매니저의 ReloadGrid() 호출
         }
     }
 
@@ -151,25 +163,30 @@ public class ImageClickHandler : MonoBehaviour
     // 다른 이미지와 자리 교환 (DOTween을 이용한 교환 애니메이션)
     void SwapPosition(ImageClickHandler otherImage)
     {
-        // 현재 이미지와 다른 이미지의 위치와 인덱스를 임시로 저장
-        Vector3 tempPosition = otherImage.transform.position;
-        Vector2Int tempIndex = otherImage.gridIndex;
+        // 1. 현재 아이템의 originalPosition과 gridIndex 임시 저장
+        Vector3 tempOriginalPosition = originalPosition;
+        Vector2Int tempGridIndex = gridIndex;
 
-        // DOTween을 이용해 각 이미지가 상대방의 위치로 부드럽게 이동
-        otherImage.moveTween = otherImage.transform.DOMove(originalPosition, moveDuration).SetEase(Ease.InOutQuad);
-        moveTween = transform.DOMove(tempPosition, moveDuration).SetEase(Ease.InOutQuad);
+        // 2. DOTween을 사용해 부드럽게 위치 교환
+        otherImage.moveTween = otherImage.transform.DOMove(tempOriginalPosition, moveDuration).SetEase(Ease.InOutQuad);
+        moveTween = transform.DOMove(otherImage.originalPosition, moveDuration).SetEase(Ease.InOutQuad);
 
-        // 인덱스 교환
-        otherImage.SetGridIndex(gridIndex);  // 다른 이미지의 인덱스를 현재 이미지의 인덱스로 설정
-        SetGridIndex(tempIndex);  // 현재 이미지의 인덱스를 다른 이미지의 인덱스로 설정
+        // 3. 그리드 매니저에서 빈 공간 처리
+        gridManager.UpdateEmptySpace(gridIndex, otherImage.gridIndex);
 
-        // 각 이미지의 원래 위치 업데이트
-        otherImage.originalPosition = otherImage.transform.position;
-        originalPosition = transform.position;
+        // 4. 인덱스와 위치 갱신
+        gridIndex = otherImage.gridIndex; // 현재 아이템 인덱스는 다른 아이템 인덱스로
+        otherImage.gridIndex = tempGridIndex; // 다른 아이템 인덱스는 현재 아이템의 인덱스로
+
+        // 5. originalPosition 갱신: 교환 후 위치를 갱신
+        originalPosition = otherImage.originalPosition; // 현재 아이템 위치 갱신
+        otherImage.originalPosition = tempOriginalPosition; // 다른 아이템 위치 갱신
 
         // 로그 출력
         Debug.Log($"교환됨: {imageName}가 ({gridIndex.x}, {gridIndex.y})로 이동함, {otherImage.imageName}는 ({otherImage.gridIndex.x}, {otherImage.gridIndex.y})로 이동함");
     }
+
+
 
     // 위치를 인덱스로 변환하는 함수
     Vector2Int GetGridIndexFromPosition(Vector3 position)
@@ -178,4 +195,16 @@ public class ImageClickHandler : MonoBehaviour
         int yIndex = Mathf.RoundToInt((position.y - minY) / gridSize);
         return new Vector2Int(xIndex, yIndex);
     }
+
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        ImageClickHandler otherImage = collision.gameObject.GetComponent<ImageClickHandler>();
+        if (otherImage != null)
+        {
+            // 다른 이미지와 자리 교환
+            SwapPosition(otherImage);
+            Debug.Log($"충돌하여 교환됨 : {imageName} ({gridIndex.x}, {gridIndex.y}) <-> {otherImage.imageName} ({otherImage.gridIndex.x}, {otherImage.gridIndex.y})");
+        }
+    }
+
 }

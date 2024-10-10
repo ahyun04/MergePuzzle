@@ -1,39 +1,32 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class GridManager : MonoBehaviour
 {
-    public List<ImageClickHandler> imageHandlers = new List<ImageClickHandler>(); // 그리드 내 모든 이미지를 관리
+    public List<Vector2Int> emptyGridIndexes = new List<Vector2Int>(); // 빈 공간 리스트
 
-    // 그리드를 다시 로드하는 함수
-    public void ReloadGrid()
+    // 빈 공간에 인덱스 추가
+    public void AddEmptySpace(Vector2Int index)
     {
-        foreach (var imageHandler in imageHandlers)
-        {
-            // 그리드 인덱스에 맞춰 이미지를 다시 배치
-            Vector3 newPosition = GetPositionFromGridIndex(imageHandler.gridIndex);
-            imageHandler.transform.position = newPosition;
-            imageHandler.originalPosition = newPosition;
-
-        }
+        emptyGridIndexes.Add(index);
     }
 
-    // 그리드 인덱스를 기반으로 실제 월드 좌표를 반환하는 함수
-    Vector3 GetPositionFromGridIndex(Vector2Int gridIndex)
+    // 빈 공간 중 하나를 반환
+    public Vector2Int GetEmptySpace()
     {
-        float xPos = gridIndex.x;
-        float yPos = gridIndex.y;
-        return new Vector3(xPos, yPos, 0f);
+        if (emptyGridIndexes.Count > 0)
+        {
+            Vector2Int emptyIndex = emptyGridIndexes[0];
+            emptyGridIndexes.RemoveAt(0); // 반환 후 삭제
+            return emptyIndex;
+        }
+        return new Vector2Int(-1, -1); // 만약 빈 공간이 없으면 에러값 반환
     }
 
-    // ImageClickHandler를 리스트에 추가하는 함수
-    public void RegisterImageHandler(ImageClickHandler handler)
+    // 이미지가 움직일 때 빈 공간 갱신
+    public void UpdateEmptySpace(Vector2Int oldIndex, Vector2Int newIndex)
     {
-        if (!imageHandlers.Contains(handler))
-        {
-            imageHandlers.Add(handler);
-            //Debug.Log($"이미지 {handler.imageName}가 GridManager에 등록됨.");
-        }
+        AddEmptySpace(oldIndex);
+        emptyGridIndexes.Remove(newIndex);
     }
 }
