@@ -651,10 +651,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 065daf15caeb4914e96ac8ca24364190, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  block00: {fileID: 0}
-  block01: {fileID: 0}
-  block10: {fileID: 0}
-  block11: {fileID: 0}
+  block00: {fileID: 742845837}
+  block01: {fileID: 274734926}
+  block10: {fileID: 265548386}
+  block11: {fileID: 86828581}
 --- !u!4 &524686649
 Transform:
   m_ObjectHideFlags: 0
